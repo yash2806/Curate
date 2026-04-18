@@ -1,0 +1,155 @@
+# 🚀 Curate
+
+![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)
+![LangChain](https://img.shields.io/badge/LangChain-Enabled-green.svg)
+![License](https://img.shields.io/badge/License-MIT-lightgrey.svg)
+
+An AI-powered CLI tool that autonomously evaluates job descriptions against your resume and submits applications to Greenhouse job boards — only when the match clears your confidence threshold.
+
+---
+
+## 📑 Table of Contents
+
+- [Features](#-features)
+- [Architecture](#-architecture)
+- [Prerequisites](#-prerequisites)
+- [Installation](#-installation)
+- [Configuration](#-configuration)
+- [Usage](#-usage)
+- [Project Structure](#-project-structure)
+- [Disclaimer](#-disclaimer)
+
+---
+
+## ✨ Features
+
+- **Native CLI** — Run `curate` from anywhere on your machine.
+- **Agentic Evaluation** — Uses LangChain to score job descriptions against your Markdown CV for technical fit.
+- **Multi-LLM Support** — Switch between OpenAI, Anthropic (Claude), and Google (Gemini) via a single config command.
+- **Cost-Optimized Filtering** — Keyword-based local filtering discards irrelevant roles *before* making any LLM API calls.
+- **Pre-Flight Checks** — Skips roles that require non-standard inputs (e.g. cover letters, visa questionnaires) to prevent failed submissions.
+- **Idempotent Runs** — Tracks applied jobs locally so you never double-apply to the same role.
+
+---
+
+## 🧠 Architecture
+
+The tool runs through five sequential phases per job listing:
+
+1. **Scrape** — Fetches live job postings from tracked Greenhouse boards via their public JSON API.
+2. **Filter** — Fast local string matching discards roles missing target keywords or containing excluded ones.
+3. **Pre-Flight** — Pings the application endpoint to confirm only standard fields are required (Name, Email, Phone, Resume).
+4. **Evaluate** — Sends the job description + your `cv.md` to an LLM, which returns a structured JSON response: `{ match: bool, confidence: 0–100, reasoning: string }`.
+5. **Apply** — If `confidence >= threshold` (default: 85), fires a `multipart/form-data` POST to Greenhouse with your PDF resume.
+
+---
+
+## 📋 Prerequisites
+
+- Python 3.9+
+- An API key from OpenAI, Anthropic, or Google
+- Your resume as a PDF file
+- Your CV as a structured Markdown file (`.md`) for LLM context
+
+---
+
+## 🚀 Installation
+
+**1. Clone the repository:**
+```bash
+git clone https://github.com/yourusername/curate.git
+cd curate
+```
+
+**2. Create and activate a virtual environment:**
+```bash
+python3 -m venv venv
+
+# Mac/Linux
+source venv/bin/activate
+
+# Windows
+venv\Scripts\activate
+```
+
+**3. Install the CLI:**
+```bash
+pip install -e .
+```
+This installs all dependencies from `setup.py` and registers the global `curate` command.
+
+---
+
+## ⚙️ Configuration
+
+**1. Add your personal files:**
+
+- Place your PDF resume in `resumes/` (e.g. `resumes/Your_Name_Resume.pdf`)
+- Place your Markdown CV in `data/` (e.g. `data/cv.md`)
+
+> Make sure the file paths in `config.py` match your exact filenames.
+
+**2. Set your LLM provider:**
+```bash
+# OpenAI
+curate config --provider openai --model gpt-4o-mini --key sk-your-api-key
+
+# Anthropic
+curate config --provider anthropic --model claude-3-5-sonnet-20240620 --key sk-ant-your-api-key
+
+# Google
+curate config --provider google --model gemini-pro --key your-google-api-key
+```
+
+**3. Tune keyword filters** *(optional)*:
+
+Open `config.py` and adjust `TARGET_KEYWORDS` and `EXCLUDED_KEYWORDS` to match your target engineering roles.
+
+---
+
+## 🛠️ Usage
+
+Companies are tracked by their Greenhouse board token — the identifier found in their job board URL (e.g. `boards.greenhouse.io/anthropic` → token is `anthropic`).
+
+**Manage tracked companies:**
+```bash
+curate add anthropic       # Track a company
+curate remove coinbase     # Stop tracking a company
+curate list                # Show all tracked companies
+```
+
+**Run the applier:**
+```bash
+curate run
+```
+
+> 💡 **Dry Run Tip:** Before your first real run, comment out the `submit_application()` call in `main.py` to preview evaluations in your terminal without submitting anything.
+
+---
+
+## 📂 Project Structure
+
+```
+Curate/
+├── setup.py                  # Package setup and CLI registration
+├── cli.py                    # Command parsing and entrypoint logic
+├── main.py                   # Core orchestration loop
+├── config.py                 # Settings, thresholds, and keyword filters
+├── fetchJobs.py              # Greenhouse API scraping and pre-flight checks
+├── langchainEvaluator.py     # LLM factory, prompt chains, and evaluation logic
+├── submitApplication.py      # Greenhouse POST request handler
+├── jobFilter.py              # Local keyword-based role filtering
+├── storage.py                # Applied job tracking and state management
+├── companies.json            # Dynamic list of tracked Greenhouse board tokens
+├── .env                      # API keys (auto-generated by CLI, git-ignored)
+├── data/
+│   └── cv.md                 # Your structured CV for LLM context
+└── resumes/
+    └── Resume.pdf            # PDF resume submitted to Greenhouse
+```
+
+---
+
+## ⚠️ Disclaimer
+
+This tool automates interactions with third-party job board APIs. Ensure your usage complies with the Terms of Service of any targeted platforms. Use responsibly — respect rate limits and avoid bulk-spamming applications.
