@@ -153,3 +153,5 @@ Curate/
 ## ⚠️ Disclaimer
 
 This tool automates interactions with third-party job board APIs. Ensure your usage complies with the Terms of Service of any targeted platforms. Use responsibly — respect rate limits and avoid bulk-spamming applications.
+
+**Credits: Gemini 3.1 Pro
