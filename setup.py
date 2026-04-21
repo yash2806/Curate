@@ -3,9 +3,10 @@ from setuptools import setup, find_packages
 setup(
     name="curate",
     version="1.0.0",
-    description="An AI-powered CLI tool to auto-apply to jobs via Greenhouse.",
-    author="Your Name",
+    description="AI-powered CLI tool for autonomous job application evaluation",
+    author="Yash Malani",
     packages=find_packages(),
+    package_dir={"": "src"},
     install_requires=[
         "requests",
         "langchain-core",
@@ -13,12 +14,12 @@ setup(
         "langchain-anthropic",
         "langchain-google-genai",
         "pydantic",
-        "python-dotenv"
+        "python-dotenv",
     ],
-    # This is the magic part that creates the terminal command
     entry_points={
         "console_scripts": [
-            "curate=cli:main", 
+            "curate=cli:main",
         ],
     },
+    python_requires=">=3.9",
 )
